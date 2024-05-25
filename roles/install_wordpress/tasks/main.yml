@@ -1,0 +1,85 @@
+---
+
+- name: Install apache
+  tags: [ apache ]
+  apt:
+    name: apache2
+    state: present
+    update_cache: yes
+  notify: Restart Apache
+
+- name: Install php extensions for WordPress
+  tags: [ php ]
+  apt:
+    pkg: "{{ php_modules }}"
+    state: present
+  notify: Restart Apache
+
+- name: Copy Github SSH private key (/home/saeed/.ssh/ansible_github_ssh_key) to host
+  tags: [ ssh, github ]
+  copy:
+    src: "/home/saeed/.ssh/ansible_github_ssh_key"
+    dest: "/home/ubuntu/.ssh/ansible_github_ssh_key"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+    remote_src: false
+
+- name: Download WordPress from private repository
+  tags: [ download, github ]
+  ansible.builtin.git:
+    repo: git@github.com:Ahmedelsa3eed/wordpress-ansible.git
+    dest: "/var/www/html/wordpress"
+    version: main
+    clone: yes
+    key_file: "/home/ubuntu/.ssh/ansible_github_ssh_key"
+    accept_hostkey: yes
+
+- name: Set ownership and permissions for WordPress files
+  tags: [ permissions ]
+  file:
+    path: /var/www/html/wordpress
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+    recurse: yes
+
+- name: Create WordPress configuration file (wp-config.php)
+  tags: [ wp-config ]
+  template:
+    src: wp-config.php.j2
+    dest: "/var/www/html/wordpress/wp-config.php"
+    owner: www-data
+    group: www-data
+    mode: '0655'
+
+- name: Create /etc/apache2/sites-available/wordpress.conf
+  tags: [ config-sites ]
+  template:
+    src: wordpress.conf.j2
+    dest: /etc/apache2/sites-available/wordpress.conf
+    owner: www-data
+    group: www-data
+    mode: '0655'
+  notify: Reload Apache
+
+- name: Enable WordPress site
+  tags: [ config ]
+  shell: |
+    a2ensite wordpress
+    a2enmod rewrite
+
+- name: Disable default Apache site
+  tags: [ config ]
+  apache2_module:
+    state: absent
+    name: 000-default
+  notify: Reload Apache
+
+- name: Remove default Apache site
+  tags: [ config ]
+  file:
+    path: /etc/apache2/sites-enabled/000-default.conf
+    state: absent
+  notify: Reload Apache

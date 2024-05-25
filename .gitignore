@@ -1,0 +1,9 @@
+# Terraform files
+tf/.terraform
+tf/.terraform.lock.hcl
+tf/terraform.tfstate
+tf/terraform.tfstate.backup
+
+# Ansible files
+vars.yml
+inventory.ini

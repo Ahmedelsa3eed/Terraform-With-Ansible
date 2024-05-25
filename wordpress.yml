@@ -1,0 +1,19 @@
+---
+
+- name: Install wordpress
+  hosts: webservers
+  become: yes
+  gather_facts: false
+  remote_user: ubuntu
+  roles:
+    - role: install_wordpress
+      tags: wordpress
+
+- name: Install MySQL
+  hosts: webservers
+  become: yes
+  gather_facts: false
+  remote_user: ubuntu
+  roles:
+    - role: install_mysql
+      tags: install_mysql

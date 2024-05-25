@@ -1,0 +1,14 @@
+---
+php_modules:
+  - php
+  - libapache2-mod-php
+  - php-mysql
+  - php-curl
+  - php-mbstring
+  - php-xml
+  - php-intl
+  - php-zip
+  - php-bcmath
+  - php-imagick
+  - php-json
+  - ghostscript
